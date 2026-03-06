@@ -203,6 +203,14 @@ export default function Home() {
 
   const t = translations[language];
 
+  const trackMeta = (event: string, params?: Record<string, unknown>) => {
+    const fbq = (window as any).fbq;
+    if (typeof fbq === 'function') {
+      if (params) fbq('track', event, params);
+      else fbq('track', event);
+    }
+  };
+
   useEffect(() => {
     const handleScroll = () => setScrollPosition(window.scrollY);
     window.addEventListener('scroll', handleScroll);
@@ -210,6 +218,7 @@ export default function Home() {
   }, []);
 
   const scrollToContact = () => {
+    trackMeta('InitiateCheckout', { source: 'hero_cta' });
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -222,6 +231,12 @@ export default function Home() {
 
     const ok = await submitForm(formData);
     if (ok) {
+      trackMeta('Lead', {
+        source: 'contact_form',
+        language,
+        services_count: formData.services.length,
+        service_selected: formData.services.join(', '),
+      });
       toast.success(language === 'fr' ? 'Message envoyé avec succès !' : 'تم إرسال الرسالة بنجاح!');
       setFormData({ name: '', email: '', phone: '', message: '', services: [] });
     }
@@ -308,7 +323,12 @@ export default function Home() {
                 {t.hero.cta}
               </Button>
               <Button asChild variant="outline" className="px-8 py-6 text-lg">
-                <a href={`tel:${companyPhone.replace(/\s+/g, '')}`}>{t.hero.call}</a>
+                <a
+                  href={`tel:${companyPhone.replace(/\s+/g, '')}`}
+                  onClick={() => trackMeta('Contact', { contact_method: 'phone', source: 'hero_call' })}
+                >
+                  {t.hero.call}
+                </a>
               </Button>
             </div>
           </div>
@@ -320,6 +340,21 @@ export default function Home() {
               style={{ transform: `translateY(${scrollPosition * 0.08}px)` }}
             />
           </div>
+        </div>
+      </section>
+
+      <section className="py-10 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <a
+            href={`https://wa.me/${companyWhatsapp}?text=Bonjour%20ZIDEX%20Trans`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackMeta('Contact', { contact_method: 'whatsapp', source: 'pre_services_cta' })}
+            className="w-full max-w-[700px] mx-auto flex items-center justify-center gap-2 md:gap-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-base sm:text-lg md:text-2xl font-bold rounded-xl md:rounded-2xl py-4 sm:py-5 md:py-6 px-4 sm:px-6 shadow-lg transition"
+          >
+            <img src="/whatsapp.svg" alt="WhatsApp" className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+            {language === 'fr' ? 'Contactez-nous sur WhatsApp' : 'تواصل معنا عبر واتساب'}
+          </a>
         </div>
       </section>
 
@@ -564,6 +599,7 @@ export default function Home() {
       <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-40">
         <a
           href={`tel:${companyPhone.replace(/\s+/g, '')}`}
+          onClick={() => trackMeta('Contact', { contact_method: 'phone', source: 'floating_button' })}
           className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-white hover:bg-green-600 hover:scale-110 transition shadow-lg hover-lift"
           title="Appel Direct"
         >
@@ -573,6 +609,7 @@ export default function Home() {
           href={`https://wa.me/${companyWhatsapp}?text=Bonjour%20ZIDEX%20Trans`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackMeta('Contact', { contact_method: 'whatsapp', source: 'floating_button' })}
           className="w-14 h-14 bg-green-600 rounded-full flex items-center justify-center text-white hover:bg-green-700 hover:scale-110 transition shadow-lg hover-lift"
           title="WhatsApp"
         >
@@ -580,6 +617,7 @@ export default function Home() {
         </a>
         <a
           href={`mailto:${companyEmail}`}
+          onClick={() => trackMeta('Contact', { contact_method: 'email', source: 'floating_button' })}
           className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center text-white hover:bg-blue-600 hover:scale-110 transition shadow-lg hover-lift"
           title="Email"
         >
