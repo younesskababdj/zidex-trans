@@ -34,7 +34,8 @@ function getMailerConfig() {
 
 function createEmailHtml(payload: ContactPayload) {
   const companyName = process.env.COMPANY_NAME || "ZIDEX Trans";
-  const logoUrl = process.env.COMPANY_LOGO_URL || "";
+  const siteUrl = process.env.SITE_URL || process.env.VITE_SITE_URL || "";
+  const logoUrl = process.env.COMPANY_LOGO_URL || (siteUrl ? `${siteUrl.replace(/\/$/, "")}/favicon.ico` : "");
   const phone = process.env.VITE_COMPANY_PHONE || "";
   const location = process.env.VITE_COMPANY_LOCATION || "";
   const services = payload.services.map((service) => `<li>${escapeHtml(service)}</li>`).join("");

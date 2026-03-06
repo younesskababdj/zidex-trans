@@ -35,7 +35,8 @@ function getMailerConfig() {
 
 function createEmailHtml(payload: ContactPayload) {
   const companyName = process.env.COMPANY_NAME || "ZIDEX Trans";
-  const logoUrl = process.env.COMPANY_LOGO_URL || "";
+  const siteUrl = process.env.SITE_URL || process.env.VITE_SITE_URL || "";
+  const logoUrl = process.env.COMPANY_LOGO_URL || (siteUrl ? `${siteUrl.replace(/\/$/, "")}/favicon.ico` : "");
   const phone = process.env.VITE_COMPANY_PHONE || "";
   const location = process.env.VITE_COMPANY_LOCATION || "";
   const services = payload.services.map((service) => `<li>${escapeHtml(service)}</li>`).join("");
@@ -69,7 +70,7 @@ function createEmailHtml(payload: ContactPayload) {
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
                   <tr><td style="padding:10px;border:1px solid #e5e7eb;background:#f9fafb;width:180px;font-weight:700;">Nom</td><td style="padding:10px;border:1px solid #e5e7eb;">${escapeHtml(payload.name)}</td></tr>
                   <tr><td style="padding:10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700;">Email</td><td style="padding:10px;border:1px solid #e5e7eb;">${escapeHtml(payload.email)}</td></tr>
-                  <tr><td style="padding:10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700;">Téléphone</td><td style="padding:10px;border:1px solid #e5e7eb;">${escapeHtml(payload.phone)}</td></tr>
+                  <tr><td style="padding:10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700;">Telephone</td><td style="padding:10px;border:1px solid #e5e7eb;">${escapeHtml(payload.phone)}</td></tr>
                 </table>
                 <h3 style="margin:20px 0 10px 0;font-size:16px;color:#111827;">Services demandés</h3>
                 <ul style="margin:0 0 18px 18px;padding:0;color:#1f2937;">${services || "<li>Aucun service sélectionné</li>"}</ul>
@@ -79,7 +80,7 @@ function createEmailHtml(payload: ContactPayload) {
             </tr>
             <tr>
               <td style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#4b5563;font-size:12px;">
-                ${escapeHtml(companyName)} ${phone ? ` | Tél: ${escapeHtml(phone)}` : ""}${location ? ` | ${escapeHtml(location)}` : ""}
+                ${escapeHtml(companyName)} ${phone ? ` | Tel: ${escapeHtml(phone)}` : ""}${location ? ` | ${escapeHtml(location)}` : ""}
               </td>
             </tr>
           </table>
@@ -111,7 +112,7 @@ async function sendContactEmail(payload: ContactPayload) {
     `Nouveau devis - ${companyName}`,
     `Nom: ${payload.name}`,
     `Email: ${payload.email}`,
-    `Téléphone: ${payload.phone}`,
+    `Telephone: ${payload.phone}`,
     `Services: ${payload.services.join(", ")}`,
     "",
     "Message:",
