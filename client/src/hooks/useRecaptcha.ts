@@ -1,30 +1,34 @@
 import { useEffect } from 'react';
 
 export function useRecaptcha() {
+  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
+
   useEffect(() => {
-    // Load reCAPTCHA script
+    if (!siteKey) return;
+    if (document.querySelector('script[data-recaptcha="true"]')) return;
+
     const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
     script.async = true;
     script.defer = true;
+    script.setAttribute('data-recaptcha', 'true');
     document.head.appendChild(script);
-
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
   }, []);
 
   const executeRecaptcha = async (action: string = 'submit'): Promise<string> => {
-    if (typeof window === 'undefined' || !window.grecaptcha) {
+    if (!siteKey || typeof window === 'undefined') {
+      return '';
+    }
+
+    if (!window.grecaptcha) {
       console.error('reCAPTCHA not loaded');
       return '';
     }
 
     try {
-      const token = await window.grecaptcha.execute('YOUR_RECAPTCHA_V3_SITE_KEY', {
-        action: action,
+      await window.grecaptcha.ready(() => undefined);
+      const token = await window.grecaptcha.execute(siteKey, {
+        action,
       });
       return token;
     } catch (error) {
@@ -39,6 +43,9 @@ export function useRecaptcha() {
 // Extend Window interface
 declare global {
   interface Window {
-    grecaptcha: any;
+    grecaptcha: {
+      ready: (cb: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+    };
   }
 }

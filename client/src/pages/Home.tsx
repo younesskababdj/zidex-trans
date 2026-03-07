@@ -6,11 +6,20 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { toast } from 'sonner';
 
 export default function Home() {
+  type FormErrors = {
+    name?: string;
+    email?: string;
+    phone?: string;
+    services?: string;
+    message?: string;
+  };
+
   const [language, setLanguage] = useState<'fr' | 'ar'>('fr');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '', services: [] as string[] });
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   const companyEmail = import.meta.env.VITE_COMPANY_EMAIL || 'contact@zidextrans.com';
   const companyPhone = import.meta.env.VITE_COMPANY_PHONE || '+212612345678';
@@ -224,8 +233,35 @@ export default function Home() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.phone || !formData.message || formData.services.length === 0) {
-      toast.error(language === 'fr' ? 'Veuillez remplir tous les champs' : 'يرجى ملء جميع الحقول');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[+\d][\d\s()-]{7,}$/;
+    const errors: FormErrors = {};
+
+    if (!formData.name.trim()) {
+      errors.name = language === 'fr' ? 'Le nom est obligatoire.' : 'الاسم مطلوب.';
+    }
+    if (!formData.email.trim()) {
+      errors.email = language === 'fr' ? "L'email est obligatoire." : 'البريد الإلكتروني مطلوب.';
+    } else if (!emailRegex.test(formData.email.trim())) {
+      errors.email = language === 'fr' ? "Format d'email invalide." : 'صيغة البريد الإلكتروني غير صحيحة.';
+    }
+    if (!formData.phone.trim()) {
+      errors.phone = language === 'fr' ? 'Le téléphone est obligatoire.' : 'رقم الهاتف مطلوب.';
+    } else if (!phoneRegex.test(formData.phone.trim())) {
+      errors.phone = language === 'fr' ? 'Numéro de téléphone invalide.' : 'رقم الهاتف غير صحيح.';
+    }
+    if (formData.services.length === 0) {
+      errors.services = language === 'fr' ? 'Sélectionnez au moins un service.' : 'اختر خدمة واحدة على الأقل.';
+    }
+    if (!formData.message.trim()) {
+      errors.message = language === 'fr' ? 'Le message est obligatoire.' : 'الرسالة مطلوبة.';
+    } else if (formData.message.trim().length < 10) {
+      errors.message = language === 'fr' ? 'Le message doit contenir au moins 10 caractères.' : 'يجب أن تحتوي الرسالة على 10 أحرف على الأقل.';
+    }
+
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      toast.error(language === 'fr' ? 'Merci de corriger les erreurs du formulaire.' : 'يرجى تصحيح أخطاء النموذج.');
       return;
     }
 
@@ -239,6 +275,7 @@ export default function Home() {
       });
       toast.success(language === 'fr' ? 'Message envoyé avec succès !' : 'تم إرسال الرسالة بنجاح!');
       setFormData({ name: '', email: '', phone: '', message: '', services: [] });
+      setFormErrors({});
     }
   };
 
@@ -472,27 +509,48 @@ export default function Home() {
                   type="text"
                   placeholder={t.contact.form.name}
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-yellow-400"
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+                    if (formErrors.name) setFormErrors({ ...formErrors, name: undefined });
+                  }}
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-yellow-400 ${
+                    formErrors.name ? 'border-red-400 bg-red-50/40' : 'border-gray-300'
+                  }`}
                 />
                 <input
                   type="email"
                   placeholder={t.contact.form.email}
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-yellow-400"
+                  onChange={(e) => {
+                    setFormData({ ...formData, email: e.target.value });
+                    if (formErrors.email) setFormErrors({ ...formErrors, email: undefined });
+                  }}
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-yellow-400 ${
+                    formErrors.email ? 'border-red-400 bg-red-50/40' : 'border-gray-300'
+                  }`}
                 />
               </div>
+              {(formErrors.name || formErrors.email) && (
+                <div className="grid md:grid-cols-2 gap-6 -mt-2">
+                  <div className="text-sm text-red-600 min-h-5">{formErrors.name || ''}</div>
+                  <div className="text-sm text-red-600 min-h-5">{formErrors.email || ''}</div>
+                </div>
+              )}
               <input
                 type="tel"
                 placeholder={t.contact.form.phone}
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, phone: e.target.value });
+                  if (formErrors.phone) setFormErrors({ ...formErrors, phone: undefined });
+                }}
                 dir={language === 'ar' ? 'rtl' : 'ltr'}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-yellow-400 ${
-                  language === 'ar' ? 'text-right' : 'text-left'
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-yellow-400 ${
+                  formErrors.phone ? 'border-red-400 bg-red-50/40' : 'border-gray-300'
+                } ${language === 'ar' ? 'text-right' : 'text-left'
                 }`}
               />
+              {formErrors.phone && <p className="text-sm text-red-600 -mt-2">{formErrors.phone}</p>}
               <div className="space-y-3">
                 <p className="text-sm font-semibold text-gray-900">{t.contact.form.services}</p>
                 <p className="text-xs text-gray-500">{t.contact.form.servicesHelp}</p>
@@ -516,6 +574,7 @@ export default function Home() {
                                 services: formData.services.filter((item) => item !== service.name),
                               });
                             }
+                            if (formErrors.services) setFormErrors({ ...formErrors, services: undefined });
                           }}
                           className="accent-yellow-500"
                         />
@@ -524,14 +583,21 @@ export default function Home() {
                     );
                   })}
                 </div>
+                {formErrors.services && <p className="text-sm text-red-600">{formErrors.services}</p>}
               </div>
               <textarea
                 placeholder={t.contact.form.message}
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, message: e.target.value });
+                  if (formErrors.message) setFormErrors({ ...formErrors, message: undefined });
+                }}
                 rows={5}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-yellow-400"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-yellow-400 ${
+                  formErrors.message ? 'border-red-400 bg-red-50/40' : 'border-gray-300'
+                }`}
               />
+              {formErrors.message && <p className="text-sm text-red-600 -mt-2">{formErrors.message}</p>}
               {success && (
                 <div className="p-4 bg-green-100 text-green-800 rounded-lg">
                   {language === 'fr'
