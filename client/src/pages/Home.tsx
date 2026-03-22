@@ -722,6 +722,7 @@ export default function Home() {
               <p className="font-semibold text-yellow-400 mb-4">{t.contact.title}</p>
               <div className="space-y-2 text-sm text-gray-300">
                 <p>{companyPhone}</p>
+                <p>+212666559490</p>
                 <p>{companyEmail}</p>
                 <p>{companyLocation}</p>
               </div>
